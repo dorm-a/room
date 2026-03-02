@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  room-info-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: room-info-web
+    restart: unless-stopped
+    ports:
+      # NAS Port : Container Port
+      # Synology NAS에서 접속할 포트를 왼쪽(예: 8080)에 지정하세요.
+      - "8080:80"
+    environment:
+      - NODE_ENV=production

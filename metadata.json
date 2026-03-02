@@ -1,0 +1,5 @@
+{
+  "name": "Room Occupancy Manager",
+  "description": "A web application to manage and visualize room occupancy on floor plans.",
+  "requestFramePermissions": []
+}
