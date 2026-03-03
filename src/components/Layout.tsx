@@ -34,7 +34,7 @@ export function Layout({ children, currentView, onChangeView, buildings, onUpdat
           <div className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>
             <LayoutIcon className="w-6 h-6 text-indigo-600 flex-shrink-0" />
             <h1 className="text-xl font-bold text-gray-900 whitespace-nowrap">
-              공간관리
+              생활관 공간관리
             </h1>
           </div>
           <button

@@ -14,7 +14,7 @@ export function Dashboard({ buildings, occupancyData, onChangeView, onUpdateBuil
   const totalRooms = occupancyData.length;
   const totalCapacity = occupancyData.reduce((acc, curr) => acc + curr.capacity, 0);
   const currentOccupants = occupancyData.reduce((acc, curr) => acc + curr.current, 0);
-  const occupancyRate = totalCapacity > 0 ? Math.round((currentOccupants / totalCapacity) * 100) : 0;
+  const occupancyRate = totalCapacity > 0 ? ((currentOccupants / totalCapacity) * 100).toFixed(1) : "0.0";
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination || !onUpdateBuildings) return;
@@ -45,7 +45,7 @@ export function Dashboard({ buildings, occupancyData, onChangeView, onUpdateBuil
             </div>
           </div>
           <div className="mt-4 text-sm text-gray-600">
-            {currentOccupants} / {totalCapacity} people
+            {currentOccupants.toLocaleString()} / {totalCapacity.toLocaleString()} people
           </div>
         </div>
 
@@ -57,7 +57,7 @@ export function Dashboard({ buildings, occupancyData, onChangeView, onUpdateBuil
             <div>
               <p className="text-sm font-medium text-gray-500">Available Rooms</p>
               <p className="text-2xl font-bold text-gray-900">
-                {occupancyData.filter(r => r.current < r.capacity).length}
+                {occupancyData.filter(r => r.current < r.capacity).length.toLocaleString()}
               </p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export function Dashboard({ buildings, occupancyData, onChangeView, onUpdateBuil
             <div>
               <p className="text-sm font-medium text-gray-500">Full Rooms</p>
               <p className="text-2xl font-bold text-gray-900">
-                {occupancyData.filter(r => r.current >= r.capacity).length}
+                {occupancyData.filter(r => r.current >= r.capacity).length.toLocaleString()}
               </p>
             </div>
           </div>

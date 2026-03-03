@@ -899,7 +899,7 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-8rem)]">
+        <div className="flex flex-col h-[calc(100vh-6rem)] md:h-[calc(100vh-4rem)]">
             {/* Top Bar with Controls */}
             <div className="mb-4 flex items-center justify-between bg-white p-4 rounded-xl shadow-sm">
                 <div className="flex gap-4 items-center">
@@ -1295,7 +1295,7 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
                                         polygonArea = Math.abs(polygonArea / 2);
 
                                         const baseFontSize = Math.min(bboxW / Math.max(room.label.length * 0.65, 1), bboxH * 0.5, Math.sqrt(polygonArea) * 0.3, 3);
-                                        const dynamicFontSize = baseFontSize * 0.8;
+                                        const dynamicFontSize = baseFontSize * 0.56;
 
                                         const imgRatio = imageRef.current ? imageRef.current.clientWidth / Math.max(1, imageRef.current.clientHeight) : 1;
 
@@ -1390,7 +1390,7 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
                                                         (Math.max(...points.map(p => p.x)) - Math.min(...points.map(p => p.x))) / Math.max(room.label.length * 0.65, 1),
                                                         (Math.max(...points.map(p => p.y)) - Math.min(...points.map(p => p.y))) * 0.5,
                                                         3
-                                                    )}
+                                                    ) * 0.7}
                                                     fontWeight="bold"
                                                     className="pointer-events-none select-none"
                                                     transform={`translate(${centerX}, ${centerY}) scale(1, ${imageRef.current ? imageRef.current.clientWidth / Math.max(1, imageRef.current.clientHeight) : 1}) translate(${-centerX}, ${-centerY})`}
@@ -1530,7 +1530,7 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
 
                 {/* Properties Panel */}
                 <div className="w-80 bg-white rounded-xl shadow-sm border border-gray-100 p-4 overflow-y-auto">
-                    <h3 className="font-semibold text-gray-900 mb-4">Properties</h3>
+                    <h3 className="font-semibold text-gray-900 mb-4">속성 (Properties)</h3>
 
                     {selectedRoomId ? (
                         <div className="space-y-4">
@@ -1540,7 +1540,7 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
                                 return (
                                     <>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Room Label</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">호실 이름 (라벨)</label>
                                             <input
                                                 type="text"
                                                 value={room.label}
@@ -1549,7 +1549,7 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Room ID (for Excel)</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">호실 ID (식별자)</label>
                                             <input
                                                 type="text"
                                                 value={room.id.startsWith('room-') ? '' : room.id}
@@ -1569,7 +1569,7 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
                                                 className="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-sm"
                                             >
                                                 <Trash2 className="w-4 h-4" />
-                                                Delete Room
+                                                호실 삭제
                                             </button>
                                         </div>
                                     </>
@@ -1583,8 +1583,8 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
                                     <span className="text-indigo-700 font-bold text-sm">{selectedRoomIds.length}</span>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-indigo-900">Rooms Selected</p>
-                                    <p className="text-xs text-indigo-600">Click empty area to deselect</p>
+                                    <p className="text-sm font-medium text-indigo-900">개 호실 선택됨</p>
+                                    <p className="text-xs text-indigo-600">빈 영역을 클릭하여 선택 해제</p>
                                 </div>
                             </div>
                             <div className="space-y-1 max-h-48 overflow-y-auto">
@@ -1606,25 +1606,25 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
                         </div>
                     ) : (
                         <p className="text-sm text-gray-500 text-center py-8">
-                            Select a room to edit its properties
+                            수정할 지도 객체(호실)를 선택하세요
                         </p>
                     )}
 
                     <div className="mt-8 pt-4 border-t">
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Instructions</h4>
-                        <ul className="text-xs text-gray-500 space-y-2 list-disc pl-4">
-                            <li><strong>Building/Floor:</strong> Use the top bar to add (+), edit (pencil), or delete (trash) buildings and floors.</li>
-                            <li><strong>Select Mode:</strong> Click to select. Drag to move.</li>
-                            <li><strong>Box Select (Window):</strong> Left-drag on empty area — selects rooms <em>fully inside</em> the box.</li>
-                            <li><strong>Box Select (Crossing):</strong> Right-drag on empty area — selects rooms <em>partially overlapping</em> the box.</li>
-                            <li><strong>Copy:</strong> Hold <code>Ctrl</code> + Drag to copy a room.</li>
-                            <li><strong>Align Copy:</strong> Hold <code>Ctrl + Shift</code> + Drag to copy horizontally/vertically.</li>
-                            <li><strong>Draw Rect:</strong> Click and drag to create a rectangle room.</li>
-                            <li><strong>Draw Poly:</strong> Click points to create a custom shape.</li>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">단축키 및 조작법</h4>
+                        <ul className="text-xs text-gray-500 space-y-2 list-disc pl-4 whitespace-normal break-keep">
+                            <li><strong>건물/층 관리:</strong> 상단 바에서 추가(+), 수정(연필 아이콘), 삭제(휴지통 아이콘)를 할 수 있습니다.</li>
+                            <li><strong>객체 선택 및 이동:</strong> 객체를 클릭하여 선택하고 패널에서 끌어서 이동합니다.</li>
+                            <li><strong>다중 선택 (포함):</strong> 빈 공간에서 마우스 <strong>왼쪽</strong> 버튼을 드래그하여 영역 <em>안에 완전히 포함된</em> 객체들을 선택합니다.</li>
+                            <li><strong>다중 선택 (걸침):</strong> 빈 공간에서 마우스 <strong>오른쪽</strong> 버튼을 드래그하여 영역에 <em>조금이라도 걸친</em> 객체들을 모두 선택합니다.</li>
+                            <li><strong>복사:</strong> <code>Ctrl</code> 키를 누른 상태로 객체를 드래그하면 복사됩니다.</li>
+                            <li><strong>직교 복사:</strong> <code>Ctrl + Shift</code> 키를 누른 상태로 객체를 드래그하면 수평/수직으로 맞춰서 복사됩니다.</li>
+                            <li><strong>사각형 그리기:</strong> 클릭하고 드래그하여 직사각형 객체를 생성합니다.</li>
+                            <li><strong>다각형 그리기:</strong> 원하는 지점을 클릭하여 점을 찍어 원하는 모양을 만듭니다. (마지막 점 클릭 또는 첫 점을 다시 클릭하여 완료)</li>
                         </ul>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

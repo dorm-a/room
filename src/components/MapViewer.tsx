@@ -13,22 +13,29 @@ interface FloorMapProps {
   floor: FloorData;
   occupancyData: RoomOccupancy[];
   searchTerm: string;
+  buildingName: string; // Added to match rooms
+  setGlobalTooltip: React.Dispatch<React.SetStateAction<{ show: boolean, x: number, y: number, content: React.ReactNode }>>;
 }
 
-const FloorMap: React.FC<FloorMapProps> = ({ floor, occupancyData, searchTerm }) => {
+const FloorMap: React.FC<FloorMapProps> = ({ floor, occupancyData, searchTerm, buildingName, setGlobalTooltip }) => {
   const imageRef = React.useRef<HTMLImageElement>(null);
   const [imageRatio, setImageRatio] = React.useState(1);
-  const getRoomColor = (roomId: string) => {
-    const data = occupancyData.find(d => d.roomId === roomId);
+  const [hoveredRoomId, setHoveredRoomId] = React.useState<string | null>(null);
+
+  // Normalize building name (e.g. "01. 남제관" -> "남제관") to match Supabase
+  const normalizedBuildingName = buildingName.replace(/^\d+\.\s*/, '');
+
+  const getRoomColor = (roomLabel: string) => {
+    const data = occupancyData.find(d => d.roomLabel === roomLabel && d.buildingName === normalizedBuildingName);
     if (!data) return 'bg-gray-200/50 border-gray-400 text-gray-500'; // No data
 
-    if (data.current >= data.capacity) return 'bg-red-500/40 border-red-600 text-red-900'; // Full
-    if (data.current / data.capacity > 0.8) return 'bg-orange-400/40 border-orange-600 text-orange-900'; // Almost full
+    if (data.capacity > 0 && data.current >= data.capacity) return 'bg-red-500/40 border-red-600 text-red-900'; // Full
+    if (data.capacity > 0 && data.current / data.capacity > 0.8) return 'bg-orange-400/40 border-orange-600 text-orange-900'; // Almost full
     return 'bg-green-500/40 border-green-600 text-green-900'; // Available
   };
 
-  const getRoomData = (roomId: string) => {
-    return occupancyData.find(d => d.roomId === roomId);
+  const getRoomData = (roomLabel: string) => {
+    return occupancyData.find(d => d.roomLabel === roomLabel && d.buildingName === normalizedBuildingName);
   };
 
   if (!floor.imageUrl) {
@@ -47,9 +54,9 @@ const FloorMap: React.FC<FloorMapProps> = ({ floor, occupancyData, searchTerm })
   };
 
   return (
-    <div className="relative inline-block w-full" style={{ minHeight: '400px' }}>
+    <div className="relative w-full" style={{ minHeight: '600px' }}>
       <div className="mb-2 font-bold text-gray-700 px-2">{floor.name}</div>
-      <div className="relative inline-block" style={{ maxWidth: '100%' }}>
+      <div className="relative inline-block w-full text-center">
         <img
           ref={imageRef}
           src={floor.imageUrl}
@@ -68,116 +75,160 @@ const FloorMap: React.FC<FloorMapProps> = ({ floor, occupancyData, searchTerm })
           preserveAspectRatio="none"
           style={{ zIndex: 10 }}
         >
-          {floor.rooms.map(room => {
-            const data = getRoomData(room.id);
-            const isMatch = searchTerm && room.label.toLowerCase().includes(searchTerm.toLowerCase());
+          {/* Create a sorted array where the hovered room is rendered last so it appears on top */}
+          {[...floor.rooms]
+            .sort((a, b) => {
+              if (a.id === hoveredRoomId) return 1;
+              if (b.id === hoveredRoomId) return -1;
+              return 0;
+            })
+            .map(room => {
+              const data = getRoomData(room.label);
+              const isMatch = searchTerm && room.label.toLowerCase().includes(searchTerm.toLowerCase());
 
-            // Backward compatibility for rectangles
-            let points = room.points;
-            if (!points && room.x !== undefined && room.width !== undefined) {
-              points = [
-                { x: room.x!, y: room.y! },
-                { x: room.x! + room.width!, y: room.y! },
-                { x: room.x! + room.width!, y: room.y! + room.height! },
-                { x: room.x!, y: room.y! + room.height! }
-              ];
-            }
-
-            if (!points) return null;
-
-            // Calculate bounding box for dynamic font sizing
-            const minX = Math.min(...points.map(p => p.x));
-            const maxX = Math.max(...points.map(p => p.x));
-            const minY = Math.min(...points.map(p => p.y));
-            const maxY = Math.max(...points.map(p => p.y));
-
-            // Calculate center for label (top 1/3)
-            const centerX = (minX + maxX) / 2;
-            const centerY = minY + (maxY - minY) * 0.33;
-            const bboxW = maxX - minX;
-            const bboxH = maxY - minY;
-
-            let polygonArea = 0;
-            for (let i = 0; i < points.length; i++) {
-              const p1 = points[i];
-              const p2 = points[(i + 1) % points.length];
-              polygonArea += (p1.x * p2.y) - (p2.x * p1.y);
-            }
-            polygonArea = Math.abs(polygonArea / 2);
-
-            const baseFontSize = Math.min(bboxW / Math.max(room.label.length * 0.65, 1), bboxH * 0.5, Math.sqrt(polygonArea) * 0.3, 3);
-            const dynamicFontSize = baseFontSize * 0.8;
-
-            // Determine fill color based on occupancy
-            let fillColor = "rgba(16, 185, 129, 0.4)"; // Green (Available)
-            let strokeColor = "#059669";
-
-            if (data) {
-              if (data.current >= data.capacity) {
-                fillColor = "rgba(239, 68, 68, 0.4)"; // Red (Full)
-                strokeColor = "#dc2626";
-              } else if (data.current / data.capacity > 0.8) {
-                fillColor = "rgba(251, 146, 60, 0.4)"; // Orange (Almost Full)
-                strokeColor = "#ea580c";
+              // Backward compatibility for rectangles
+              let points = room.points;
+              if (!points && room.x !== undefined && room.width !== undefined) {
+                points = [
+                  { x: room.x!, y: room.y! },
+                  { x: room.x! + room.width!, y: room.y! },
+                  { x: room.x! + room.width!, y: room.y! + room.height! },
+                  { x: room.x!, y: room.y! + room.height! }
+                ];
               }
-            } else {
-              fillColor = "rgba(255, 255, 255, 1)"; // White (No Data)
-              strokeColor = "#9ca3af";
-            }
 
-            return (
-              <g
-                key={room.id}
-                className="pointer-events-auto group"
-              >
-                <title>{`${room.label}: ${data ? `${data.current}/${data.capacity}` : 'No Data'}`}</title>
-                {/* Opaque white base to completely hide background map text */}
-                <polygon
-                  points={pointsToString(points)}
-                  fill="#ffffff"
-                  stroke="none"
-                />
-                <polygon
-                  points={pointsToString(points)}
-                  fill={fillColor}
-                  stroke={strokeColor}
-                  strokeWidth={isMatch ? "0.6" : "0.2"}
-                  className={`transition-all duration-200 ${isMatch ? 'fill-opacity-70' : 'hover:fill-opacity-60'}`}
-                  style={isMatch ? { filter: 'drop-shadow(0 0 4px rgba(99, 102, 241, 0.5))' } : {}}
-                />
-                <text
-                  x={centerX}
-                  y={data ? centerY - dynamicFontSize * 0.4 : centerY}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="#1f2937"
-                  fontSize={dynamicFontSize}
-                  fontWeight="bold"
-                  className="pointer-events-none select-none"
-                  style={{ textShadow: '0px 0px 2px rgba(255,255,255,0.9)' }}
-                  transform={`translate(${centerX}, ${centerY}) scale(1, ${imageRatio}) translate(${-centerX}, ${-centerY})`}
+              if (!points) return null;
+
+              // Calculate bounding box for dynamic font sizing
+              const minX = Math.min(...points.map(p => p.x));
+              const maxX = Math.max(...points.map(p => p.x));
+              const minY = Math.min(...points.map(p => p.y));
+              const maxY = Math.max(...points.map(p => p.y));
+
+              // Calculate center for label (top 1/3)
+              const centerX = (minX + maxX) / 2;
+              const centerY = minY + (maxY - minY) * 0.33;
+              // Calculate bottom center for occupancy info (2/3 mark)
+              const bottomCenterY = minY + (maxY - minY) * 0.66;
+              const bboxW = maxX - minX;
+              const bboxH = maxY - minY;
+
+              let polygonArea = 0;
+              for (let i = 0; i < points.length; i++) {
+                const p1 = points[i];
+                const p2 = points[(i + 1) % points.length];
+                polygonArea += (p1.x * p2.y) - (p2.x * p1.y);
+              }
+              polygonArea = Math.abs(polygonArea / 2);
+
+              const baseFontSize = Math.min(bboxW / Math.max(room.label.length * 0.65, 1), bboxH * 0.5, Math.sqrt(polygonArea) * 0.3, 3);
+              const dynamicFontSize = baseFontSize * 0.56;
+
+              // Determine fill color based on occupancy
+              let fillColor = "rgba(16, 185, 129, 0.4)"; // Green (Available)
+              let strokeColor = "#059669";
+
+              if (data) {
+                if (data.capacity > 0 && data.current >= data.capacity) {
+                  fillColor = "rgba(239, 68, 68, 0.4)"; // Red (Full)
+                  strokeColor = "#dc2626";
+                } else if (data.capacity > 0 && data.current / data.capacity > 0.8) {
+                  fillColor = "rgba(251, 146, 60, 0.4)"; // Orange (Almost Full)
+                  strokeColor = "#ea580c";
+                }
+              } else {
+                fillColor = "rgba(255, 255, 255, 1)"; // White (No Data)
+                strokeColor = "#9ca3af";
+              }
+
+              return (
+                <g
+                  key={room.id}
+                  className="pointer-events-auto group cursor-pointer transition-transform duration-300 ease-in-out hover:-translate-y-0.5 hover:drop-shadow-md"
+                  onMouseEnter={(e) => {
+                    setHoveredRoomId(room.id);
+                    setGlobalTooltip({
+                      show: true,
+                      x: e.clientX,
+                      y: e.clientY,
+                      content: (
+                        <div>
+                          <div className="font-bold border-b border-gray-600 pb-1 mb-1">
+                            {room.label} {data ? `(${data.current}/${data.capacity})` : '(데이터 없음)'}
+                          </div>
+                          {data && data.occupants && data.occupants.length > 0 && (
+                            <ul className="text-left text-xs space-y-1">
+                              {data.occupants.map((o, idx) => (
+                                <li key={`${o.id}-${idx}`}>- {o.id} ({o.name}, {o.major})</li>
+                              ))}
+                            </ul>
+                          )}
+                          {data && data.remarks && (
+                            <div className="mt-2 pt-2 border-t border-gray-600 text-xs text-yellow-300 italic">
+                              비고: {data.remarks}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    });
+                  }}
+                  onMouseMove={(e) => {
+                    setGlobalTooltip(prev => ({ ...prev, x: e.clientX, y: e.clientY }));
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredRoomId(null);
+                    setGlobalTooltip(prev => ({ ...prev, show: false }));
+                  }}
                 >
-                  {room.label}
-                </text>
-                {data && (
+                  {/* Opaque white base to completely hide background map text */}
+                  <polygon
+                    points={pointsToString(points)}
+                    fill="#ffffff"
+                    stroke="none"
+                  />
+                  <polygon
+                    points={pointsToString(points)}
+                    fill={fillColor}
+                    stroke={strokeColor}
+                    strokeWidth={isMatch ? "0.6" : "0.2"}
+                    className={`transition-all duration-300 ${isMatch ? 'fill-opacity-70' : 'group-hover:fill-opacity-75 group-hover:stroke-[0.4]'}`}
+                    style={isMatch ? { filter: 'drop-shadow(0 0 4px rgba(99, 102, 241, 0.5))' } : {}}
+                  />
                   <text
                     x={centerX}
-                    y={centerY + dynamicFontSize * 0.8}
+                    y={centerY}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fill="#4b5563"
-                    fontSize={dynamicFontSize * 0.8}
+                    fill="#1f2937"
+                    fontSize={dynamicFontSize}
+                    fontWeight="bold"
                     className="pointer-events-none select-none"
                     style={{ textShadow: '0px 0px 2px rgba(255,255,255,0.9)' }}
                     transform={`translate(${centerX}, ${centerY}) scale(1, ${imageRatio}) translate(${-centerX}, ${-centerY})`}
                   >
-                    {data.current}/{data.capacity}
+                    {room.label}
                   </text>
-                )}
-              </g>
-            );
-          })}
+                  {data && (
+                    <text
+                      x={centerX}
+                      y={bottomCenterY}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fill="#1f2937"
+                      fontSize={dynamicFontSize * 0.75}
+                      fontWeight="bold"
+                      className="pointer-events-none select-none"
+                      style={{ textShadow: '0px 0px 2px rgba(255,255,255,0.9)' }}
+                      transform={`translate(${centerX}, ${bottomCenterY}) scale(1, ${imageRatio}) translate(${-centerX}, ${-bottomCenterY})`}
+                    >
+                      ({data.current}/{data.capacity})
+                    </text>
+                  )}
+                </g>
+              );
+            })}
         </svg>
+
       </div>
     </div>
   );
@@ -187,6 +238,7 @@ export function MapViewer({ buildings, occupancyData, selectedBuildingId, onSele
   const [internalBuildingId, setInternalBuildingId] = useState(buildings[0]?.id);
   const [selectedFloorId, setSelectedFloorId] = useState<string>('all'); // Default to 'all' or first floor
   const [searchTerm, setSearchTerm] = useState('');
+  const [globalTooltip, setGlobalTooltip] = useState<{ show: boolean, x: number, y: number, content: React.ReactNode }>({ show: false, x: 0, y: 0, content: null });
 
   const currentBuildingId = selectedBuildingId !== undefined ? selectedBuildingId : internalBuildingId;
   const currentBuilding = buildings.find(b => b.id === currentBuildingId);
@@ -215,7 +267,7 @@ export function MapViewer({ buildings, occupancyData, selectedBuildingId, onSele
   }) || [];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <div className="flex flex-col h-[calc(100vh-6rem)] md:h-[calc(100vh-4rem)]">
       {/* Controls */}
       <div className="mb-4 flex flex-col md:flex-row items-center justify-between bg-white p-4 rounded-xl shadow-sm gap-4">
         <div className="flex gap-4 w-full md:w-auto">
@@ -258,6 +310,8 @@ export function MapViewer({ buildings, occupancyData, selectedBuildingId, onSele
                 floor={floor}
                 occupancyData={occupancyData}
                 searchTerm={searchTerm}
+                buildingName={currentBuilding?.name || ''}
+                setGlobalTooltip={setGlobalTooltip}
               />
             ))
           ) : (
@@ -268,6 +322,8 @@ export function MapViewer({ buildings, occupancyData, selectedBuildingId, onSele
                   floor={floor}
                   occupancyData={occupancyData}
                   searchTerm={searchTerm}
+                  buildingName={currentBuilding?.name || ''}
+                  setGlobalTooltip={setGlobalTooltip}
                 />
               ) : null;
             })()
@@ -294,6 +350,19 @@ export function MapViewer({ buildings, occupancyData, selectedBuildingId, onSele
           <span>No Data</span>
         </div>
       </div>
+
+      {/* Global Tooltip Portal/Overlay */}
+      {globalTooltip.show && (
+        <div
+          className="fixed z-50 pointer-events-none px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-xl whitespace-pre-wrap transition-opacity duration-150"
+          style={{
+            left: globalTooltip.x + 15,
+            top: globalTooltip.y + 15,
+          }}
+        >
+          {globalTooltip.content}
+        </div>
+      )}
     </div>
   );
 }

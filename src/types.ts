@@ -33,7 +33,10 @@ export interface BuildingData {
 
 export interface RoomOccupancy {
   roomId: string;
+  buildingName?: string;
+  roomLabel?: string;
   current: number;
   capacity: number;
-  occupants?: string[]; // Optional list of names
+  occupants?: { id: string; name: string; major: string; }[]; // Detailed occupant list
+  remarks?: string;
 }
