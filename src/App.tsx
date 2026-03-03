@@ -145,10 +145,10 @@ export default function App() {
       );
     }
 
-    // [TEMPORARILY DISABLED] Google Login is disabled until the production URL is ready.
-    // if (!user || isAllowed === false) {
-    //   return <Login />;
-    // }
+    // Google Login enabled
+    if (!user || isAllowed === false) {
+      return <Login />;
+    }
 
     switch (currentView) {
       case 'dashboard':
@@ -174,10 +174,10 @@ export default function App() {
     }
   };
 
-  // [TEMPORARILY DISABLED] Google Login is disabled until the production URL is ready.
-  // if (!isLoading && (!user || isAllowed === false)) {
-  //   return <Login />;
-  // }
+  // Google Login enabled
+  if (!isLoading && (!user || isAllowed === false)) {
+    return <Login />;
+  }
 
   return (
     <Layout

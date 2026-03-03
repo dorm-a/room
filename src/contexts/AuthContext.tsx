@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             // Check allowed_user table. Assuming it has an 'email' column.
             const { data, error } = await supabase
-                .from('allowed_user')
+                .from('allowed_users')
                 .select('*')
                 .eq('email', email)
                 .maybeSingle();
