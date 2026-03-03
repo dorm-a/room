@@ -39,4 +39,5 @@ export interface RoomOccupancy {
   capacity: number;
   occupants?: { id: string; name: string; major: string; }[]; // Detailed occupant list
   remarks?: string;
+  tel?: string;
 }

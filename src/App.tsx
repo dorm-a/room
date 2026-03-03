@@ -46,7 +46,7 @@ export default function App() {
         let rFrom = 0;
         const rStep = 1000;
         while (true) {
-          const res = await supabase.from('rooms').select('건물, 호실, 인실, 비고').range(rFrom, rFrom + rStep - 1);
+          const res = await supabase.from('rooms').select('건물, 호실, 인실, 비고, "Tel."').range(rFrom, rFrom + rStep - 1);
           if (res.data && res.data.length > 0) {
             allRooms.push(...res.data);
             if (res.data.length < rStep) break;
@@ -88,7 +88,8 @@ export default function App() {
             current: 0,
             capacity: capacity,
             occupants: [],
-            remarks: room.비고
+            remarks: room.비고,
+            tel: room['Tel.']
           });
         });
 

@@ -141,6 +141,12 @@ const FloorMap: React.FC<FloorMapProps> = ({ floor, occupancyData, searchTerm, b
                 strokeColor = "#9ca3af";
               }
 
+              // Override color to Gray if Tel. contains 'X'
+              if (data && data.tel && String(data.tel).toUpperCase().includes('X')) {
+                fillColor = "rgba(156, 163, 175, 0.4)"; // Gray
+                strokeColor = "#6b7280";
+              }
+
               return (
                 <g
                   key={room.id}
