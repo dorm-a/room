@@ -1261,7 +1261,8 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
                                     {currentFloor.rooms.map(room => {
                                         // Backward compatibility for rectangles
                                         let points = room.points;
-                                        if (!points && room.x !== undefined && room.width !== undefined) {
+                                        const isFallbackRect = !points && room.x !== undefined && room.width !== undefined;
+                                        if (isFallbackRect) {
                                             points = [
                                                 { x: room.x!, y: room.y! },
                                                 { x: room.x! + room.width!, y: room.y! },
@@ -1295,7 +1296,17 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
                                         polygonArea = Math.abs(polygonArea / 2);
 
                                         const baseFontSize = Math.min(bboxW / Math.max(room.label.length * 0.65, 1), bboxH * 0.5, Math.sqrt(polygonArea) * 0.3, 3);
-                                        const dynamicFontSize = baseFontSize * 0.56;
+                                        let dynamicFontSize = baseFontSize * 0.56;
+
+                                        const isRect = isFallbackRect || (points.length === 4 &&
+                                            ((Math.abs(points[0].x - points[3].x) < 0.01 && Math.abs(points[0].y - points[1].y) < 0.01 &&
+                                                Math.abs(points[1].x - points[2].x) < 0.01 && Math.abs(points[2].y - points[3].y) < 0.01) ||
+                                                (Math.abs(points[0].x - points[1].x) < 0.01 && Math.abs(points[0].y - points[3].y) < 0.01 &&
+                                                    Math.abs(points[1].y - points[2].y) < 0.01 && Math.abs(points[2].x - points[3].x) < 0.01)));
+
+                                        if (isRect) {
+                                            dynamicFontSize *= 1.2;
+                                        }
 
                                         const imgRatio = imageRef.current ? imageRef.current.clientWidth / Math.max(1, imageRef.current.clientHeight) : 1;
 
@@ -1613,6 +1624,8 @@ export function MapEditor({ buildings, onUpdateBuildings, selectedBuildingId: pr
                     <div className="mt-8 pt-4 border-t">
                         <h4 className="text-sm font-medium text-gray-900 mb-2">단축키 및 조작법</h4>
                         <ul className="text-xs text-gray-500 space-y-2 list-disc pl-4 whitespace-normal break-keep">
+                            <li><strong>줌(확대/축소):</strong> 마우스 휠로 zoom in/out을 할 수 있습니다.</li>
+                            <li><strong>이동(pan):</strong> space bar를 누른 상태로 드래그하여 화면을 이동할 수 있습니다.</li>
                             <li><strong>건물/층 관리:</strong> 상단 바에서 추가(+), 수정(연필 아이콘), 삭제(휴지통 아이콘)를 할 수 있습니다.</li>
                             <li><strong>객체 선택 및 이동:</strong> 객체를 클릭하여 선택하고 패널에서 끌어서 이동합니다.</li>
                             <li><strong>다중 선택 (포함):</strong> 빈 공간에서 마우스 <strong>왼쪽</strong> 버튼을 드래그하여 영역 <em>안에 완전히 포함된</em> 객체들을 선택합니다.</li>

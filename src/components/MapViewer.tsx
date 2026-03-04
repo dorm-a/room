@@ -88,7 +88,8 @@ const FloorMap: React.FC<FloorMapProps> = ({ floor, occupancyData, searchTerm, b
 
               // Backward compatibility for rectangles
               let points = room.points;
-              if (!points && room.x !== undefined && room.width !== undefined) {
+              const isFallbackRect = !points && room.x !== undefined && room.width !== undefined;
+              if (isFallbackRect) {
                 points = [
                   { x: room.x!, y: room.y! },
                   { x: room.x! + room.width!, y: room.y! },
@@ -122,7 +123,17 @@ const FloorMap: React.FC<FloorMapProps> = ({ floor, occupancyData, searchTerm, b
               polygonArea = Math.abs(polygonArea / 2);
 
               const baseFontSize = Math.min(bboxW / Math.max(room.label.length * 0.65, 1), bboxH * 0.5, Math.sqrt(polygonArea) * 0.3, 3);
-              const dynamicFontSize = baseFontSize * 0.56;
+              let dynamicFontSize = baseFontSize * 0.56;
+
+              const isRect = isFallbackRect || (points.length === 4 &&
+                ((Math.abs(points[0].x - points[3].x) < 0.01 && Math.abs(points[0].y - points[1].y) < 0.01 &&
+                  Math.abs(points[1].x - points[2].x) < 0.01 && Math.abs(points[2].y - points[3].y) < 0.01) ||
+                  (Math.abs(points[0].x - points[1].x) < 0.01 && Math.abs(points[0].y - points[3].y) < 0.01 &&
+                    Math.abs(points[1].y - points[2].y) < 0.01 && Math.abs(points[2].x - points[3].x) < 0.01)));
+
+              if (isRect) {
+                dynamicFontSize *= 1.2;
+              }
 
               // Determine fill color based on occupancy
               let fillColor = "rgba(16, 185, 129, 0.4)"; // Green (Available)
