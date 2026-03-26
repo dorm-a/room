@@ -116,15 +116,12 @@ export function Dashboard({ buildings, occupancyData, onChangeView, onUpdateBuil
                                 <p className="text-sm text-gray-500">{building.floors.length} Floors</p>
                               </div>
                             </div>
-                            <button
-                              onClick={() => {
-                                if (onSelectBuilding) onSelectBuilding(building.id);
-                                onChangeView('viewer');
-                              }}
-                              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
+                            <a
+                              href={`#viewer/${building.id}`}
+                              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 text-center inline-block"
                             >
                               View Map
-                            </button>
+                            </a>
                           </div>
                         </div>
                       )}
