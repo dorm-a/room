@@ -106,8 +106,7 @@ export function Layout({ children, currentView, onChangeView, buildings, onUpdat
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         onClick={() => {
-                                          onChangeView('editor');
-                                          onSelectBuilding && onSelectBuilding(building.id);
+                                          window.location.hash = `#editor/${building.id}`;
                                         }}
                                         className={`flex items-center gap-2 p-2 rounded-md text-sm cursor-pointer transition-colors ${isActive && activeBuildingId === building.id
                                           ? 'bg-indigo-100 text-indigo-900 font-medium'
@@ -136,8 +135,7 @@ export function Layout({ children, currentView, onChangeView, buildings, onUpdat
                           <div
                             key={building.id}
                             onClick={() => {
-                              onChangeView('viewer');
-                              onSelectBuilding && onSelectBuilding(building.id);
+                              window.location.hash = `#viewer/${building.id}`;
                             }}
                             className={`flex items-center p-2 rounded-md text-sm cursor-pointer transition-colors ${isActive && activeBuildingId === building.id
                               ? 'bg-indigo-100/50 text-indigo-900 font-medium'
