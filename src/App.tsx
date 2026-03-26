@@ -11,10 +11,40 @@ import { Login } from './components/Login';
 import { supabase } from './lib/supabase';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'viewer' | 'editor' | 'data'>('dashboard');
+  const [currentView, _setCurrentView] = useState<'dashboard' | 'viewer' | 'editor' | 'data'>('dashboard');
+  const [activeBuildingId, _setActiveBuildingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      const [view, buildingId] = hash.split('/');
+      
+      _setCurrentView(['dashboard', 'viewer', 'editor', 'data'].includes(view) ? (view as any) : 'dashboard');
+      
+      if (buildingId) {
+        _setActiveBuildingId(buildingId);
+      } else {
+        _setActiveBuildingId(null);
+      }
+    };
+    
+    // Initialize state from hash on mount
+    handleHashChange();
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const setCurrentView = (view: 'dashboard' | 'viewer' | 'editor' | 'data') => {
+    window.location.hash = activeBuildingId ? `#${view}/${activeBuildingId}` : `#${view}`;
+  };
+
+  const setActiveBuildingId = (id: string | null) => {
+    window.location.hash = id ? `#${currentView}/${id}` : `#${currentView}`;
+  };
+
   const [buildings, setBuildings] = useState<BuildingData[]>([]);
   const [occupancyData, setOccupancyData] = useState<RoomOccupancy[]>(MOCK_OCCUPANCY);
-  const [activeBuildingId, setActiveBuildingId] = useState<string | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   const currentBuildingId = activeBuildingId || (buildings.length > 0 ? buildings[0].id : null);
