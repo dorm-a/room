@@ -153,7 +153,7 @@ export default function App() {
 
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard buildings={buildings} onUpdateBuildings={setBuildings} occupancyData={occupancyData} onChangeView={setCurrentView} />;
+        return <Dashboard buildings={buildings} onUpdateBuildings={setBuildings} occupancyData={occupancyData} onChangeView={setCurrentView} onSelectBuilding={setActiveBuildingId} />;
       case 'viewer':
         return <MapViewer
           buildings={buildings}
@@ -171,7 +171,7 @@ export default function App() {
       case 'data':
         return <DataManager occupancyData={occupancyData} onUpdateData={setOccupancyData} />;
       default:
-        return <Dashboard buildings={buildings} onUpdateBuildings={setBuildings} occupancyData={occupancyData} onChangeView={setCurrentView} />;
+        return <Dashboard buildings={buildings} onUpdateBuildings={setBuildings} occupancyData={occupancyData} onChangeView={setCurrentView} onSelectBuilding={setActiveBuildingId} />;
     }
   };
 

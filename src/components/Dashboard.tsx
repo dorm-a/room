@@ -7,9 +7,10 @@ interface DashboardProps {
   occupancyData: RoomOccupancy[];
   onChangeView: (view: 'dashboard' | 'viewer' | 'editor') => void;
   onUpdateBuildings?: (buildings: BuildingData[]) => void;
+  onSelectBuilding?: (id: string) => void;
 }
 
-export function Dashboard({ buildings, occupancyData, onChangeView, onUpdateBuildings }: DashboardProps) {
+export function Dashboard({ buildings, occupancyData, onChangeView, onUpdateBuildings, onSelectBuilding }: DashboardProps) {
   // Calculate some stats
   const totalRooms = occupancyData.length;
   const totalCapacity = occupancyData.reduce((acc, curr) => acc + curr.capacity, 0);
@@ -116,7 +117,10 @@ export function Dashboard({ buildings, occupancyData, onChangeView, onUpdateBuil
                               </div>
                             </div>
                             <button
-                              onClick={() => onChangeView('viewer')}
+                              onClick={() => {
+                                if (onSelectBuilding) onSelectBuilding(building.id);
+                                onChangeView('viewer');
+                              }}
                               className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
                             >
                               View Map
